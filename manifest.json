@@ -2,7 +2,7 @@
   "name": "FAST CPR KOÇU",
   "short_name": "CPR KOÇU",
   "description": "İlaç Tanıtım CPR Oluşturma Platformu",
-  "start_url": "./FAST_CPR_KOCU_FINAL.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
