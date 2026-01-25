@@ -5,6 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FAST CPR KOÇU</title>
   
+  <!-- PWA Meta Tags -->
+  <meta name="description" content="İlaç Tanıtım CPR Oluşturma Platformu">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CPR KOÇU">
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- Apple Touch Icon (opsiyonel - varsa kullanılır) -->
+  <link rel="apple-touch-icon" href="icon-192.png">
+  
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   
@@ -535,6 +548,22 @@
     align-items: center;
     gap: 10px;
     flex-shrink: 0;
+  }
+
+  /* Style Pills Grid */
+  .style-pills-grid {
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    gap: 6px;
+    align-items: center;
+    max-width: 300px;
+  }
+  
+  .style-pills-grid .tag {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
   }
 
   .tag {
@@ -7391,7 +7420,9 @@ if (document.readyState === 'loading') {
             <b><span class="arrow">▶</span> CPR Dönüştürme <span style="font-weight: 300; font-style: italic;">(öğrenme stiline uygun)</span></b>
           </div>
           <div class="accMeta">
-            <span class="tag" id="mini_styles">4/4 stil kapalı</span>
+            <div id="mini_styles" class="style-pills-grid">
+              <span class="tag">4/4 stil kapalı</span>
+            </div>
           </div>
         </summary>
         
@@ -7839,7 +7870,7 @@ if (document.readyState === 'loading') {
         
         const styleCounter = document.getElementById('mini_styles');
         if (styleCounter) {
-          styleCounter.textContent = '0/4 stil';
+          styleCounter.innerHTML = '<span class="tag">0/4 stil</span>';
         }
       } else {
         // Seçili olanları göster
@@ -7855,11 +7886,16 @@ if (document.readyState === 'loading') {
         const styleCounter = document.getElementById('mini_styles');
         if (styleCounter) {
           const count = this.selectedLearningStyles.length;
-          const names = this.selectedLearningStyles
-            .map(id => this.learningStyles.find(s => s.id === id)?.name)
-            .filter(Boolean)
-            .join(', ');
-          styleCounter.textContent = `${count}/4 stil (${names})`;
+          const styleNames = this.selectedLearningStyles
+            .map(id => {
+              const style = this.learningStyles.find(s => s.id === id);
+              return style ? style.name.split(' ')[0] : null; // Sadece ilk kelime (Aktivist, Reflektör, vb)
+            })
+            .filter(Boolean);
+          
+          // Her stil için ayrı pill oluştur
+          const pills = styleNames.map(name => `<span class="tag">${name}</span>`).join('');
+          styleCounter.innerHTML = pills;
         }
       }
     },
@@ -10917,6 +10953,21 @@ document.addEventListener('DOMContentLoaded', function() {
      ============================================ -->
 <script>
 !function(){"use strict";console.log("🛡️ Güvenlik katmanı başlatılıyor..."),document.addEventListener("contextmenu",function(_0x1a){return _0x1a.preventDefault(),!1},!1),document.addEventListener("keydown",function(_0x2b){return"F12"===_0x2b.key||123===_0x2b.keyCode?(_0x2b.preventDefault(),!1):_0x2b.ctrlKey&&_0x2b.shiftKey&&"I"===_0x2b.key?(_0x2b.preventDefault(),!1):_0x2b.ctrlKey&&_0x2b.shiftKey&&"J"===_0x2b.key?(_0x2b.preventDefault(),!1):_0x2b.ctrlKey&&_0x2b.shiftKey&&"C"===_0x2b.key?(_0x2b.preventDefault(),!1):_0x2b.ctrlKey&&"u"===_0x2b.key?(_0x2b.preventDefault(),!1):_0x2b.ctrlKey&&"s"===_0x2b.key?(_0x2b.preventDefault(),!1):_0x2b.ctrlKey&&"p"===_0x2b.key?(_0x2b.preventDefault(),!1):void 0},!1),document.addEventListener("copy",function(_0x3c){return _0x3c.preventDefault(),!1},!1),document.addEventListener("cut",function(_0x4d){return _0x4d.preventDefault(),!1},!1),document.addEventListener("selectstart",function(_0x5e){return"INPUT"===_0x5e.target.tagName||"TEXTAREA"===_0x5e.target.tagName||(_0x5e.preventDefault(),!1)},!1),document.addEventListener("dragstart",function(_0x6f){return _0x6f.preventDefault(),!1},!1);const _0x7a=document.createElement("style");_0x7a.textContent="\n    * {\n      -webkit-user-select: none !important;\n      -moz-user-select: none !important;\n      -ms-user-select: none !important;\n      user-select: none !important;\n    }\n    input, textarea {\n      -webkit-user-select: text !important;\n      -moz-user-select: text !important;\n      -ms-user-select: text !important;\n      user-select: text !important;\n    }\n  ",document.head.appendChild(_0x7a),console.log("✅ Güvenlik katmanı aktif!")}();
+</script>
+
+<!-- PWA Service Worker Registration -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js')
+      .then(registration => {
+        console.log('✅ PWA: Service Worker kayıtlı!', registration.scope);
+      })
+      .catch(error => {
+        console.log('❌ PWA: Service Worker kaydedilemedi:', error);
+      });
+  });
+}
 </script>
 
 
