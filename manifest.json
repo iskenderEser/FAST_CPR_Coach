@@ -1,7 +1,7 @@
 {
   "name": "FAST CPR KOÇU",
   "short_name": "FAST CPR KOÇU",
-  "description": "İlaç Tanıtım CPR Oluşturma Platformu",
+  "description": "Verimli İlaç Tanıtımı İçin CPR Oluşturma Platformu",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
