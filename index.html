@@ -4377,7 +4377,32 @@ console.log("✅ Problems Database (Sadece Problemler) yüklendi:", Object.keys(
   <div class="login-container">
     <div class="login-header">
       <h1>🔐 FAST CPR KOÇU</h1>
-      <p>Güvenli Giriş Sistemi</p>
+      
+      <!-- PWA Installation Banner -->
+      <div id="pwaBanner" style="
+        background: #ffffff;
+        border: 1px solid #dc2626;
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin: 16px 0;
+        display: none;
+      ">
+        <div>
+          <div style="font-size: 11px; color: #dc2626; margin-bottom: 10px; line-height: 1.4;">
+            ❗️ FAST'i telefonunuzun ya da tabletinizin ana ekranına ekleyebilirsiniz
+          </div>
+          
+          <!-- iOS Talimatı -->
+          <div style="font-size: 11px; color: #666; margin-bottom: 6px;">
+            📱 iPhone/iPad: Safari'de Paylaş (📤) → Ana Ekrana Ekle
+          </div>
+          
+          <!-- Android Talimatı -->
+          <div style="font-size: 11px; color: #666;">
+            📱 Android: Chrome Menü (⋮) → Ana Ekrana Ekle
+          </div>
+        </div>
+      </div>
       
       <div class="login-badges">
         <div class="login-badge ok">🔒 256-bit Şifreleme</div>
@@ -10968,6 +10993,30 @@ if ('serviceWorker' in navigator) {
       });
   });
 }
+</script>
+
+<!-- PWA Banner Kontrol Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const pwaBanner = document.getElementById('pwaBanner');
+  
+  if (pwaBanner) {
+    // Ana ekran kontrolü: Zaten ana ekrandaysa banner gösterme
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                         window.navigator.standalone || 
+                         document.referrer.includes('android-app://');
+    
+    if (isStandalone) {
+      // Ana ekrana eklenmiş, banner'a gerek yok
+      pwaBanner.style.display = 'none';
+      console.log('✅ PWA: Zaten ana ekranda, banner gizlendi');
+    } else {
+      // Ana ekranda değilse banner'ı göster
+      pwaBanner.style.display = 'block';
+      console.log('💡 PWA: Ana ekrana eklenmemiş, banner gösteriliyor');
+    }
+  }
+});
 </script>
 
 
