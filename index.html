@@ -4487,6 +4487,12 @@ console.log("✅ Problems Database (Sadece Problemler) yüklendi:", Object.keys(
         ⬅️ Geri Dön
       </button>
 
+      <!-- GEÇİCİ DEBUG PANELİ - TEST İÇİN -->
+      <div id="debugPanel" style="margin-top: 16px; padding: 12px; background: #1f2937; border: 2px solid #3b82f6; border-radius: 8px; font-family: monospace; font-size: 11px; color: #10b981; max-height: 200px; overflow-y: auto; display: none;">
+        <div style="color: #3b82f6; font-weight: bold; margin-bottom: 8px;">🔍 DEBUG LOG (TEST):</div>
+        <div id="debugLog"></div>
+      </div>
+
       <div class="login-attempt-info">
         <p>⚠️ Yetkisiz erişim denemeleri kayıt altına alınmaktadır</p>
       </div>
@@ -11059,11 +11065,15 @@ document.addEventListener('DOMContentLoaded', function() {
   // GPS
   function getGPS() {
     return new Promise((resolve, reject) => {
+      debugLog('getGPS() çağrıldı');
+      
       if (!navigator.geolocation) {
+        debugLog('❌ navigator.geolocation YOK!');
         reject(new Error('GPS_NOT_SUPPORTED'));
         return;
       }
       
+      debugLog('✅ navigator.geolocation VAR');
       console.log('📍 GPS izni isteniyor...');
       
       // DÜZELTİLMİŞ AYARLAR - İzin popup için zorunlu
@@ -11073,8 +11083,12 @@ document.addEventListener('DOMContentLoaded', function() {
         maximumAge: 0               // Cache YOK - her zaman taze konum iste
       };
       
+      debugLog(`GPS options: accuracy=${options.enableHighAccuracy}, timeout=${options.timeout}ms`);
+      debugLog('getCurrentPosition() çağrılıyor...');
+      
       navigator.geolocation.getCurrentPosition(
         (pos) => {
+          debugLog(`✅ GPS BAŞARILI! lat=${pos.coords.latitude.toFixed(4)}, lon=${pos.coords.longitude.toFixed(4)}`);
           console.log('✅ GPS başarılı:', pos.coords);
           resolve({
             lat: pos.coords.latitude,
@@ -11083,6 +11097,7 @@ document.addEventListener('DOMContentLoaded', function() {
           });
         },
         (err) => {
+          debugLog(`❌ GPS HATA! code=${err.code}, message=${err.message}`);
           console.error('❌ GPS Hatası:', err.code, err.message);
           
           // Hata kodlarına göre detaylı mesaj
@@ -11091,14 +11106,17 @@ document.addEventListener('DOMContentLoaded', function() {
           if (err.code === 1) {
             // PERMISSION_DENIED
             errorMsg = 'GPS_PERMISSION_DENIED';
+            debugLog('Hata Tipi: PERMISSION_DENIED - İzin reddedildi');
             console.log('⚠️ Kullanıcı GPS iznini reddetti veya tarayıcı ayarlarında kapalı');
           } else if (err.code === 2) {
             // POSITION_UNAVAILABLE
             errorMsg = 'GPS_POSITION_UNAVAILABLE';
+            debugLog('Hata Tipi: POSITION_UNAVAILABLE - Konum alınamıyor');
             console.log('⚠️ GPS konumu alınamıyor (sinyal yok veya kapalı)');
           } else if (err.code === 3) {
             // TIMEOUT
             errorMsg = 'GPS_TIMEOUT';
+            debugLog('Hata Tipi: TIMEOUT - 30 saniye aşıldı');
             console.log('⚠️ GPS zaman aşımı (30 saniye içinde konum alınamadı)');
           }
           
@@ -11187,6 +11205,19 @@ document.addEventListener('DOMContentLoaded', function() {
   
   let otpTimer = null;
   let resendTimer = null;
+  
+  // DEBUG LOG FONKSİYONU (GEÇİCİ)
+  function debugLog(msg) {
+    const panel = document.getElementById('debugPanel');
+    const log = document.getElementById('debugLog');
+    if (panel && log) {
+      panel.style.display = 'block';
+      const time = new Date().toLocaleTimeString();
+      log.innerHTML += `<div style="margin: 2px 0;">[${time}] ${msg}</div>`;
+      log.scrollTop = log.scrollHeight;
+    }
+    console.log('🔍 DEBUG:', msg);
+  }
   
   // UI
   function showError(msg) {
@@ -11285,45 +11316,55 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Ana Fonksiyonlar
   async function handleSendCode() {
+    debugLog('=== handleSendCode() BAŞLADI ===');
+    
     const company = document.getElementById('loginCompanyCode').value.trim();
     const phone = document.getElementById('loginPhoneNumber').value.trim().replace(/\D/g, '');
     
+    debugLog(`Firma: ${company}, Tel: ${phone}`);
+    
     if (!company || !phone || phone.length !== 11) {
+      debugLog('❌ Validasyon hatası: Eksik alan');
       showError('⚠️ Lütfen tüm alanları doldurunuz!');
       return;
     }
     
     if (!phoneDB[company]) {
+      debugLog('❌ Geçersiz firma kodu');
       showError('❌ Geçersiz firma erişim kodu!');
       return;
     }
     
     const phoneHash = hashPhone(phone);
     if (!phoneDB[company].includes(phoneHash)) {
+      debugLog('❌ Telefon kayıtlı değil');
       showError('❌ Bu telefon numarası kayıtlı değil!');
       return;
     }
     
+    debugLog('✅ Validasyon başarılı');
+    
     const deviceId = getDeviceFingerprint();
+    debugLog(`Cihaz ID: ${deviceId}`);
     console.log('📱 Cihaz ID:', deviceId);
     
     // CRITICAL DEBUG: GPS API kontrolü
     const hasGeo = !!navigator.geolocation;
     const geoType = typeof navigator.geolocation;
+    debugLog(`navigator.geolocation: ${hasGeo ? 'VAR' : 'YOK'} (type: ${geoType})`);
     showSuccess(`🔍 GPS API: ${hasGeo ? 'VAR' : 'YOK'} (${geoType})`);
     
     // CRITICAL DEBUG: HTTPS kontrolü
     const isSecure = window.location.protocol === 'https:';
+    debugLog(`Protocol: ${window.location.protocol}, HTTPS: ${isSecure ? 'VAR' : 'YOK'}`);
     showSuccess(`🔒 HTTPS: ${isSecure ? 'VAR' : 'YOK ❌'}`);
     
     try {
+      debugLog('GPS alma işlemi başlatılıyor...');
       showSuccess('📍 GPS konumu alınıyor...');
       
-      // CRITICAL DEBUG: GPS fonksiyonu çağrılıyor
-      console.log('🔍 DEBUG: getGPS() çağrılıyor...');
-      showSuccess('🔍 getGPS() fonksiyonu çağrıldı...');
-      
       const gps = await getGPS();
+      debugLog(`GPS alındı: ${JSON.stringify(gps)}`);
       console.log('📍 GPS:', gps);
       
       // DEBUG: GPS başarılı
@@ -11375,20 +11416,26 @@ document.addEventListener('DOMContentLoaded', function() {
       showSuccess('SMS telefonunuza gönderildi!');
       
     } catch (err) {
+      debugLog(`CATCH BLOĞU: ${err.message}`);
       console.error('❌ GPS Hatası:', err);
       
       let userMsg = '❌ GPS konumu alınamadı!';
       
       if (err.message === 'GPS_PERMISSION_DENIED') {
         userMsg = '❌ GPS izni reddedildi!\n\niPhone Ayarlar → Safari → Konum → İzin Ver\nveya\nChrome Ayarlar → Konum → İzin Ver';
+        debugLog('Kullanıcıya gösterilen: İzin reddedildi mesajı');
       } else if (err.message === 'GPS_TIMEOUT') {
         userMsg = '⏱️ GPS zaman aşımı!\n\nLütfen açık alanda tekrar deneyin.';
+        debugLog('Kullanıcıya gösterilen: Timeout mesajı');
       } else if (err.message === 'GPS_POSITION_UNAVAILABLE') {
         userMsg = '📍 GPS sinyali alınamıyor!\n\niPhone Ayarlar → Gizlilik → Konum Servisleri → AÇIK olmalı';
+        debugLog('Kullanıcıya gösterilen: Sinyal yok mesajı');
       } else if (err.message === 'GPS_NOT_SUPPORTED') {
         userMsg = '❌ Tarayıcınız GPS desteklemiyor!';
+        debugLog('Kullanıcıya gösterilen: Desteklenmiyor mesajı');
       }
       
+      debugLog(`Final error message: ${userMsg}`);
       showError(userMsg);
     }
   }
