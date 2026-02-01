@@ -11060,22 +11060,51 @@ document.addEventListener('DOMContentLoaded', function() {
   function getGPS() {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
-        reject(new Error('GPS desteklenmiyor'));
+        reject(new Error('GPS_NOT_SUPPORTED'));
         return;
       }
       
+      console.log('📍 GPS izni isteniyor...');
+      
+      // DÜZELTİLMİŞ AYARLAR - İzin popup için zorunlu
+      const options = {
+        enableHighAccuracy: true,  // Gerçek GPS kullan - izin popup için gerekli
+        timeout: 30000,             // 30 saniye timeout
+        maximumAge: 0               // Cache YOK - her zaman taze konum iste
+      };
+      
       navigator.geolocation.getCurrentPosition(
-        (pos) => resolve({
-          lat: pos.coords.latitude,
-          lon: pos.coords.longitude,
-          acc: pos.coords.accuracy
-        }),
-        (err) => reject(err),
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        }
+        (pos) => {
+          console.log('✅ GPS başarılı:', pos.coords);
+          resolve({
+            lat: pos.coords.latitude,
+            lon: pos.coords.longitude,
+            acc: pos.coords.accuracy
+          });
+        },
+        (err) => {
+          console.error('❌ GPS Hatası:', err.code, err.message);
+          
+          // Hata kodlarına göre detaylı mesaj
+          let errorMsg = 'GPS_UNKNOWN_ERROR';
+          
+          if (err.code === 1) {
+            // PERMISSION_DENIED
+            errorMsg = 'GPS_PERMISSION_DENIED';
+            console.log('⚠️ Kullanıcı GPS iznini reddetti veya tarayıcı ayarlarında kapalı');
+          } else if (err.code === 2) {
+            // POSITION_UNAVAILABLE
+            errorMsg = 'GPS_POSITION_UNAVAILABLE';
+            console.log('⚠️ GPS konumu alınamıyor (sinyal yok veya kapalı)');
+          } else if (err.code === 3) {
+            // TIMEOUT
+            errorMsg = 'GPS_TIMEOUT';
+            console.log('⚠️ GPS zaman aşımı (30 saniye içinde konum alınamadı)');
+          }
+          
+          reject(new Error(errorMsg));
+        },
+        options
       );
     });
   }
@@ -11278,10 +11307,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const deviceId = getDeviceFingerprint();
     console.log('📱 Cihaz ID:', deviceId);
     
+    // DEBUG: Ekrana log yazdır
+    showSuccess(`🔍 DEBUG: Cihaz ID alındı`);
+    
     try {
       showSuccess('📍 GPS konumu alınıyor...');
+      
+      // DEBUG: GPS fonksiyonu çağrılıyor
+      console.log('🔍 DEBUG: getGPS() çağrılıyor...');
+      
       const gps = await getGPS();
       console.log('📍 GPS:', gps);
+      
+      // DEBUG: GPS başarılı
+      showSuccess(`✅ GPS alındı: ${gps.lat.toFixed(4)}, ${gps.lon.toFixed(4)}`);
       
       const saved = localStorage.getItem(`fast_auth_${phone}`);
       if (saved) {
@@ -11330,7 +11369,20 @@ document.addEventListener('DOMContentLoaded', function() {
       
     } catch (err) {
       console.error('❌ GPS Hatası:', err);
-      showError('❌ GPS konumu alınamadı! Lütfen konum izni verin.');
+      
+      let userMsg = '❌ GPS konumu alınamadı!';
+      
+      if (err.message === 'GPS_PERMISSION_DENIED') {
+        userMsg = '❌ GPS izni reddedildi!\n\niPhone Ayarlar → Safari → Konum → İzin Ver\nveya\nChrome Ayarlar → Konum → İzin Ver';
+      } else if (err.message === 'GPS_TIMEOUT') {
+        userMsg = '⏱️ GPS zaman aşımı!\n\nLütfen açık alanda tekrar deneyin.';
+      } else if (err.message === 'GPS_POSITION_UNAVAILABLE') {
+        userMsg = '📍 GPS sinyali alınamıyor!\n\niPhone Ayarlar → Gizlilik → Konum Servisleri → AÇIK olmalı';
+      } else if (err.message === 'GPS_NOT_SUPPORTED') {
+        userMsg = '❌ Tarayıcınız GPS desteklemiyor!';
+      }
+      
+      showError(userMsg);
     }
   }
   
