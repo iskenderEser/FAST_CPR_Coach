@@ -11025,8 +11025,9 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // API (Obfuscated)
   const _0xapi = {
-    k: atob('YjdjYzJlN2VmYWNkODVkODAyNmEyN2E3MDJhY2FhMmY='),
-    s: atob('RkFTVCBDUFIgS09DVQ==')
+    k: atob('YjdjYzJlN2VmYWNkODVkODAyNmEyN2E3MDJhY2FhMmY='), // API Key
+    h: atob('YzRjYjZhYWRiZjFiM2ZhMGE3ZjNiMTI2M2NiODdmNzY5NWE2MjIwYjNlZTI2M2ZmNmIyM2NiZjllNGM0NGNkMA=='), // Secret Hash
+    s: atob('RkFTVCBDUFIgS09DVQ==') // Sender
   };
   
   // Telefon Database
@@ -11154,7 +11155,7 @@ document.addEventListener('DOMContentLoaded', function() {
       // İletimerkezi API v1 - GET metodu (DOĞRU FORMAT)
       const url = new URL('https://api.iletimerkezi.com/v1/send-sms/get/');
       url.searchParams.append('key', _0xapi.k);
-      url.searchParams.append('hash', _0xapi.k);
+      url.searchParams.append('hash', _0xapi.h); // Secret Hash kullan
       url.searchParams.append('text', messageText); // Browser otomatik encode eder
       url.searchParams.append('receipents', phone); // TEK NUMARA
       url.searchParams.append('sender', _0xapi.s);
