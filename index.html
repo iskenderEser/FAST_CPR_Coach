@@ -11307,20 +11307,27 @@ document.addEventListener('DOMContentLoaded', function() {
     const deviceId = getDeviceFingerprint();
     console.log('📱 Cihaz ID:', deviceId);
     
-    // DEBUG: Ekrana log yazdır
-    showSuccess(`🔍 DEBUG: Cihaz ID alındı`);
+    // CRITICAL DEBUG: GPS API kontrolü
+    const hasGeo = !!navigator.geolocation;
+    const geoType = typeof navigator.geolocation;
+    showSuccess(`🔍 GPS API: ${hasGeo ? 'VAR' : 'YOK'} (${geoType})`);
+    
+    // CRITICAL DEBUG: HTTPS kontrolü
+    const isSecure = window.location.protocol === 'https:';
+    showSuccess(`🔒 HTTPS: ${isSecure ? 'VAR' : 'YOK ❌'}`);
     
     try {
       showSuccess('📍 GPS konumu alınıyor...');
       
-      // DEBUG: GPS fonksiyonu çağrılıyor
+      // CRITICAL DEBUG: GPS fonksiyonu çağrılıyor
       console.log('🔍 DEBUG: getGPS() çağrılıyor...');
+      showSuccess('🔍 getGPS() fonksiyonu çağrıldı...');
       
       const gps = await getGPS();
       console.log('📍 GPS:', gps);
       
       // DEBUG: GPS başarılı
-      showSuccess(`✅ GPS alındı: ${gps.lat.toFixed(4)}, ${gps.lon.toFixed(4)}`);
+      showSuccess(`✅ GPS BAŞARILI: ${gps.lat.toFixed(4)}, ${gps.lon.toFixed(4)}`);
       
       const saved = localStorage.getItem(`fast_auth_${phone}`);
       if (saved) {
