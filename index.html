@@ -11146,49 +11146,48 @@ document.addEventListener('DOMContentLoaded', function() {
   
   async function sendOTPSMS(phone, code) {
     try {
-      const response = await fetch('https://api.iletimerkezi.com/v1/send-sms/get/', {
-        method: 'POST',
+      debugLog(`SMS gönderimi başlatılıyor: ${phone}`);
+      
+      // İletimerkezi API v1 - GET metodu
+      const url = new URL('https://api.iletimerkezi.com/v1/send-sms/get/');
+      url.searchParams.append('apiKey', _0xapi.k);
+      url.searchParams.append('apiHash', _0xapi.k);
+      url.searchParams.append('sender', _0xapi.s);
+      url.searchParams.append('recipient', phone);
+      url.searchParams.append('message', `FAST CPR Dogrulama Kodunuz: ${code}\n\nKod 5 dakika gecerlidir. Kimseyle paylasmayiniz.`);
+      
+      debugLog(`API URL hazırlandı: ${url.origin}${url.pathname}`);
+      
+      const response = await fetch(url.toString(), {
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          request: {
-            authentication: {
-              key: _0xapi.k,
-              hash: _0xapi.k
-            },
-            order: {
-              sender: _0xapi.s,
-              sendDateTime: '',
-              iys: '1',
-              iysList: 'BIREYSEL'
-            },
-            recipients: {
-              number: [phone]
-            },
-            message: {
-              text: `FAST CPR Dogrulama Kodunuz: ${code}\n\nKod 5 dakika gecerlidir. Kimseyle paylasmayiniz.`
-            }
-          }
-        })
+          'Accept': 'application/json'
+        }
       });
       
+      debugLog(`API response status: ${response.status}`);
+      
       const result = await response.json();
+      debugLog(`API response: ${JSON.stringify(result)}`);
       
       if (result.response && result.response.status) {
         const status = result.response.status;
         if (status.code === 200) {
+          debugLog('✅ SMS başarıyla gönderildi!');
           console.log('✅ SMS başarıyla gönderildi:', result);
           return { success: true, data: result };
         } else {
+          debugLog(`❌ SMS API Hatası: ${status.code} - ${status.message}`);
           console.error('❌ SMS Hatası:', status.message);
           throw new Error(status.message || 'SMS gönderilemedi');
         }
       } else {
+        debugLog('❌ API yanıtı beklenmeyen formatta');
         throw new Error('API yanıtı beklenmeyen formatta');
       }
       
     } catch (error) {
+      debugLog(`❌ SMS Gönderim EXCEPTION: ${error.message}`);
       console.error('❌ SMS Gönderim Hatası:', error);
       throw error;
     }
@@ -11417,22 +11416,32 @@ document.addEventListener('DOMContentLoaded', function() {
       
     } catch (err) {
       debugLog(`CATCH BLOĞU: ${err.message}`);
-      console.error('❌ GPS Hatası:', err);
+      console.error('❌ Hata:', err);
       
-      let userMsg = '❌ GPS konumu alınamadı!';
+      let userMsg = '❌ Bir hata oluştu!';
       
+      // GPS hataları
       if (err.message === 'GPS_PERMISSION_DENIED') {
         userMsg = '❌ GPS izni reddedildi!\n\niPhone Ayarlar → Safari → Konum → İzin Ver\nveya\nChrome Ayarlar → Konum → İzin Ver';
-        debugLog('Kullanıcıya gösterilen: İzin reddedildi mesajı');
+        debugLog('Kullanıcıya gösterilen: GPS İzin reddedildi');
       } else if (err.message === 'GPS_TIMEOUT') {
         userMsg = '⏱️ GPS zaman aşımı!\n\nLütfen açık alanda tekrar deneyin.';
-        debugLog('Kullanıcıya gösterilen: Timeout mesajı');
+        debugLog('Kullanıcıya gösterilen: GPS Timeout');
       } else if (err.message === 'GPS_POSITION_UNAVAILABLE') {
         userMsg = '📍 GPS sinyali alınamıyor!\n\niPhone Ayarlar → Gizlilik → Konum Servisleri → AÇIK olmalı';
-        debugLog('Kullanıcıya gösterilen: Sinyal yok mesajı');
+        debugLog('Kullanıcıya gösterilen: GPS Sinyal yok');
       } else if (err.message === 'GPS_NOT_SUPPORTED') {
         userMsg = '❌ Tarayıcınız GPS desteklemiyor!';
-        debugLog('Kullanıcıya gösterilen: Desteklenmiyor mesajı');
+        debugLog('Kullanıcıya gösterilen: GPS Desteklenmiyor');
+      } 
+      // SMS hataları
+      else if (err.message && err.message.includes('fetch')) {
+        userMsg = '❌ SMS API bağlantı hatası!\n\nİnternet bağlantınızı kontrol edin veya daha sonra tekrar deneyin.';
+        debugLog('Kullanıcıya gösterilen: SMS API bağlantı hatası');
+      } else {
+        // Diğer hatalar (muhtemelen SMS API)
+        userMsg = `❌ SMS gönderilemedi!\n\nHata: ${err.message}`;
+        debugLog(`Kullanıcıya gösterilen: SMS hatası - ${err.message}`);
       }
       
       debugLog(`Final error message: ${userMsg}`);
